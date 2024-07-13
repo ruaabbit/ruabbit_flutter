@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:provider/provider.dart';
 
+import '../model/UserProfile.dart';
 import '../util/persist.dart';
 
 class MePage extends StatefulWidget {
-  final Function(bool) onLogoutCallback;
+  final void Function(bool) onLogoutCallback;
 
   const MePage({super.key, required this.onLogoutCallback});
 
@@ -13,36 +15,32 @@ class MePage extends StatefulWidget {
 }
 
 class MePageState extends State<MePage> {
-  List<Cookie?> cookies = [];
-  CookieManager cookieManager = CookieManager.instance();
+  late CookieManager cookieManager;
 
   @override
   void initState() {
     super.initState();
-
-    getSavedCookies().then((cookies) {
-      this.cookies = cookies;
-    });
+    cookieManager = CookieManager.instance();
   }
 
-  Future<void> _logout() async {
-    await deleteSavedCookies();
-    await deleteIsLogin();
-    await cookieManager.deleteAllCookies();
-    await cookieManager.removeSessionCookies();
-    await PlatformWebStorageManager(
-            const PlatformWebStorageManagerCreationParams())
+  void _logout() {
+    deleteSavedCookies();
+    deleteIsLogin();
+    cookieManager.deleteAllCookies();
+    cookieManager.removeSessionCookies();
+    PlatformWebStorageManager(const PlatformWebStorageManagerCreationParams())
         .deleteAllData();
-    setState(() {
-      cookies = [];
-    });
 
-    widget.onLogoutCallback(false);
-    // 可以在这里添加导航到登录页面的逻辑
+    Provider.of<UserProfile>(context, listen: false).isLogin = false;
+    Provider.of<UserProfile>(context, listen: false).clearCookies();
+
+    widget.onLogoutCallback(true);
   }
 
   @override
   Widget build(BuildContext context) {
+    final cookies = Provider.of<UserProfile>(context).cookies;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('个人中心'),
@@ -50,17 +48,18 @@ class MePageState extends State<MePage> {
       body: Column(
         children: [
           Expanded(
-            child: ListView.builder(
-              itemCount: cookies.length,
-              itemBuilder: (context, index) {
-                final cookie = cookies[index];
-                return ListTile(
-                  title: Text(cookie!.name),
-                  subtitle: Text(cookie.value),
-                );
-              },
-            ),
-          ),
+              child: ListView.builder(
+            itemCount: cookies.length,
+            itemBuilder: (context, index) {
+              final cookie = cookies[index];
+              final title = cookie.name;
+              final subtitle = cookie.value;
+              return ListTile(
+                title: Text(title),
+                subtitle: Text(subtitle),
+              );
+            },
+          )),
           ElevatedButton(
             onPressed: _logout,
             child: const Text('退出登录'),

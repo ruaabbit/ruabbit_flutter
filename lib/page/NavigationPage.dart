@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../util/persist.dart';
+import 'package:provider/provider.dart';
+import 'package:ruabbit_flutter/model/UserProfile.dart';
 import 'LoginPage.dart';
 import 'MainPage.dart';
 import 'MePage.dart';
@@ -13,23 +14,20 @@ class NavigationPage extends StatefulWidget {
 
 class NavigationPageState extends State<NavigationPage> {
   int _selectedIndex = 0;
-  bool _isLoggedIn = false; // 添加登录状态
 
   // 更新页面列表
   late final List<Widget> _pages;
 
-  void _handleLogout(bool isLoggedIn) {
-    deleteIsLogin();
+  void _handleLogout(bool result) {
+    debugPrint(result.toString());
     setState(() {
-      _isLoggedIn = isLoggedIn;
       _selectedIndex = 0;
     });
   }
 
-  void _handleLogin(bool isLoggedIn) {
-    saveIsLogin();
+  void _handleLogin(bool result) {
+    debugPrint(result.toString());
     setState(() {
-      _isLoggedIn = isLoggedIn;
       _selectedIndex = 1;
     });
   }
@@ -37,24 +35,22 @@ class NavigationPageState extends State<NavigationPage> {
   @override
   void initState() {
     super.initState();
-    getIsLogin().then((value) {
-      _isLoggedIn = value;
-    });
     _pages = [
       const MainPage(), // 替换为您的主页
-      MePage(onLogoutCallback: _handleLogout),
+      MePage(
+        onLogoutCallback: _handleLogout,
+      ),
     ];
   }
 
-  void _onItemTapped(int index) {
-    if (index == 1 && !_isLoggedIn) {
+  void onItemTapped(int index) {
+    bool isLogin = Provider.of<UserProfile>(context, listen: false).isLogin;
+
+    if (index == 1 && !isLogin) {
       // 如果点击个人中心且未登录，打开登录页面
       Navigator.push(
         context,
-        MaterialPageRoute(
-            builder: (context) => LoginPage(
-                  onLoginCallback: _handleLogin,
-                )),
+        MaterialPageRoute(builder: (context) => const LoginPage()),
       );
     } else {
       setState(() {
@@ -81,7 +77,7 @@ class NavigationPageState extends State<NavigationPage> {
           ),
         ],
         currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
+        onTap: onItemTapped,
       ),
     );
   }
