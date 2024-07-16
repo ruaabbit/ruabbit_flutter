@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../app/WaterFree/page/water_free_page.dart';
+
 class MainPage extends StatelessWidget {
   const MainPage({super.key});
 
@@ -60,25 +62,6 @@ class MainPage extends StatelessWidget {
           ),
           // Add more ListTiles as needed
         ],
-      ),
-    );
-  }
-}
-
-class WaterFreePage extends StatelessWidget {
-  const WaterFreePage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('WaterFree Page'),
-      ),
-      body: Center(
-        child: Text(
-          'Welcome to the WaterFree Page!',
-          style: Theme.of(context).textTheme.headlineMedium,
-        ),
       ),
     );
   }

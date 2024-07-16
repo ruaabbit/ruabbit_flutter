@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:provider/provider.dart';
-import 'package:ruabbit_flutter/model/UserProfile.dart';
+import 'package:ruabbit_flutter/model/user_profile.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -79,6 +79,7 @@ class LoginPageState extends State<LoginPage> {
                   });
                   Provider.of<UserProfile>(context, listen: false).isLogin =
                       true;
+
 
                   setState(() {
                     webViewVisible = false;

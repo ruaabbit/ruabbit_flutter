@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:ruabbit_flutter/model/UserProfile.dart';
-import 'LoginPage.dart';
-import 'MainPage.dart';
-import 'MePage.dart';
+import 'package:ruabbit_flutter/model/user_profile.dart';
+import 'login_page.dart';
+import 'main_page.dart';
+import 'me_page.dart';
 
 class NavigationPage extends StatefulWidget {
   const NavigationPage({super.key});
@@ -36,26 +36,14 @@ class NavigationPageState extends State<NavigationPage> {
     super.initState();
     _pages = [
       const MainPage(), // 替换为您的主页
-      MePage(
-        onLogoutCallback: _handleLogout,
-      ),
+      const MePage(),
     ];
   }
 
   void onItemTapped(int index) {
-    bool isLogin = Provider.of<UserProfile>(context, listen: false).isLogin;
-
-    if (index == 1 && !isLogin) {
-      // 如果点击个人中心且未登录，打开登录页面
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const LoginPage()),
-      );
-    } else {
-      setState(() {
-        _selectedIndex = index;
-      });
-    }
+    setState(() {
+      _selectedIndex = index;
+    });
   }
 
   @override
