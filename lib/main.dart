@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
+
 import 'package:ruabbit_flutter/model/UserProfile.dart';
 import 'package:ruabbit_flutter/page/NavigationPage.dart';
 
@@ -19,6 +21,7 @@ class MyApp extends StatelessWidget {
         theme: ThemeData(
           useMaterial3: true,
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.orange),
+          textTheme: GoogleFonts.playballTextTheme(),
         ),
       ),
     );

@@ -26,7 +26,6 @@ class NavigationPageState extends State<NavigationPage> {
   }
 
   void _handleLogin(bool result) {
-    debugPrint(result.toString());
     setState(() {
       _selectedIndex = 1;
     });
