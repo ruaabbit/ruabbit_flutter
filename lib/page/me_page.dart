@@ -36,8 +36,8 @@ class MePageState extends State<MePage> {
   }
 
   void _logout() {
-    deleteSavedCookies();
-    deleteIsLogin();
+    // deleteSavedCookies();
+    // deleteIsLogin();
     cookieManager.deleteAllCookies();
     cookieManager.removeSessionCookies();
     PlatformWebStorageManager(const PlatformWebStorageManagerCreationParams())
@@ -47,6 +47,12 @@ class MePageState extends State<MePage> {
     Provider.of<UserProfile>(context, listen: false).clearCookies();
 
     // widget.onLogoutCallback(true);
+  }
+
+  void _login(bool result) {
+    if (result) {
+      setState(() {});
+    }
   }
 
   @override
@@ -62,7 +68,7 @@ class MePageState extends State<MePage> {
         children: [
           // 显示登录状态
           ListTile(
-            title: Text(userProfile.isLogin ? '已登录' : '未登录'),
+            title: Text(userProfile.isLogin ? '信息门户已登录' : '信息门户未登录'),
             trailing: userProfile.isLogin
                 ? TextButton(
                     onPressed: () {
@@ -75,7 +81,9 @@ class MePageState extends State<MePage> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => const LoginPage()),
+                            builder: (context) => LoginPage(
+                                  onLoginCallback: _login,
+                                )),
                       );
                     },
                     child: const Text('登录'),

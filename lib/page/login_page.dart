@@ -4,7 +4,9 @@ import 'package:provider/provider.dart';
 import 'package:ruabbit_flutter/model/user_profile.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+  final void Function(bool) onLoginCallback;
+
+  const LoginPage({super.key, required this.onLoginCallback});
 
   @override
   LoginPageState createState() => LoginPageState();
@@ -44,6 +46,7 @@ class LoginPageState extends State<LoginPage> {
             duration: const Duration(milliseconds: 300),
             onEnd: () {
               if (!webViewVisible) {
+                widget.onLoginCallback(true);
                 Navigator.of(context).pop();
               }
             },
@@ -79,7 +82,6 @@ class LoginPageState extends State<LoginPage> {
                   });
                   Provider.of<UserProfile>(context, listen: false).isLogin =
                       true;
-
 
                   setState(() {
                     webViewVisible = false;
