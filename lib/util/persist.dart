@@ -3,6 +3,10 @@ import 'dart:convert';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../app/WaterFree/model/water_free_profile.dart';
+import '../model/user_profile.dart';
+
+// isLogin
 Future<bool> getIsLogin() async {
   final prefs = await SharedPreferences.getInstance();
   final bool? isLogin = prefs.getBool('isLogin');
@@ -35,6 +39,7 @@ Future<bool> saveIsLogin() async {
   }
 }
 
+// cookies
 Future<void> saveCookies(List<Cookie> cookies) async {
   final prefs = await SharedPreferences.getInstance();
   final cookieList = cookies.map((cookie) => cookie.toJson()).toList();
@@ -58,4 +63,27 @@ Future<bool> deleteSavedCookies() async {
     return prefs.remove('cookies');
   }
   return false;
+}
+
+Future<UserProfile> getUserProfileFromPrefs() async {
+  final prefs = await SharedPreferences.getInstance();
+  final String? userProfileJsonString = prefs.getString('userProfile');
+  if (userProfileJsonString != null) {
+    final userProfileJson = jsonDecode(userProfileJsonString);
+    return UserProfile.fromJson(userProfileJson);
+  } else {
+    return UserProfile(cookies: [], isLogin: false);
+  }
+}
+
+Future<WaterFreeProfile> getWaterFreeProfileFromPrefs() async {
+  final prefs = await SharedPreferences.getInstance();
+  final String? waterFreeProfileJsonString =
+      prefs.getString('waterFreeProfile');
+  if (waterFreeProfileJsonString != null) {
+    final waterFreeProfileJson = jsonDecode(waterFreeProfileJsonString);
+    return WaterFreeProfile.fromJson(waterFreeProfileJson);
+  } else {
+    return WaterFreeProfile(cardId: '', waterDispenserList: []);
+  }
 }

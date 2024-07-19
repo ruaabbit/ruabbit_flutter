@@ -160,7 +160,7 @@ class MePageState extends State<MePage> {
               itemBuilder: (context, index) {
                 final cookie = userProfile.cookies[index];
                 return ListTile(
-                  title: Text(cookie.name),
+                  title: Text(cookie!.name),
                   subtitle: Text(cookie.value),
                 );
               },
