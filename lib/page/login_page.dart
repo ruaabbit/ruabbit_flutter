@@ -3,6 +3,8 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:provider/provider.dart';
 import 'package:ruabbit_flutter/model/user_profile.dart';
 
+import '../util/persist.dart';
+
 class LoginPage extends StatefulWidget {
   final void Function(bool) onLoginCallback;
 
@@ -18,6 +20,22 @@ class LoginPageState extends State<LoginPage> {
   String title = '信息门户登录';
   CookieManager cookieManager = CookieManager.instance();
   bool webViewVisible = true;
+
+  Future<void> _saveCookiesAndLoginStatus() async {
+    final cookies =
+        await cookieManager.getCookies(url: WebUri('https://my.ouc.edu.cn/'));
+    if (mounted) {
+      final userProfile = Provider.of<UserProfile>(context, listen: false);
+      userProfile.cookies = cookies;
+      userProfile.isLogin = true;
+
+      await saveUserProfileToPrefs(userProfile);
+
+      setState(() {
+        webViewVisible = false;
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -73,19 +91,7 @@ class LoginPageState extends State<LoginPage> {
               },
               onPageCommitVisible: (controller, url) {
                 if (url.toString() == 'https://my.ouc.edu.cn/#/home') {
-                  cookieManager
-                      .getCookies(url: WebUri('https://my.ouc.edu.cn/'))
-                      .then((cookies) {
-                    debugPrint(cookies.toString());
-                    Provider.of<UserProfile>(context, listen: false).cookies =
-                        cookies;
-                  });
-                  Provider.of<UserProfile>(context, listen: false).isLogin =
-                      true;
-
-                  setState(() {
-                    webViewVisible = false;
-                  });
+                  _saveCookiesAndLoginStatus();
                 }
               },
             ),

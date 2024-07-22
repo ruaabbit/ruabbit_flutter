@@ -1,70 +1,10 @@
 import 'dart:convert';
-
-import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:ruabbit_flutter/app/WaterFree/model/water_dispenser.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import '../app/WaterFree/model/water_free_profile.dart';
 import '../model/user_profile.dart';
 
-// isLogin
-Future<bool> getIsLogin() async {
-  final prefs = await SharedPreferences.getInstance();
-  final bool? isLogin = prefs.getBool('isLogin');
-  if (isLogin != null) {
-    return isLogin;
-  } else {
-    return false;
-  }
-}
-
-Future<bool> deleteIsLogin() async {
-  final prefs = await SharedPreferences.getInstance();
-  final bool? isLogin = prefs.getBool('isLogin');
-  if (isLogin != null) {
-    prefs.remove('isLogin');
-    return true;
-  } else {
-    return false;
-  }
-}
-
-Future<bool> saveIsLogin() async {
-  final prefs = await SharedPreferences.getInstance();
-  final bool? isLogin = prefs.getBool('isLogin');
-  if (isLogin == null) {
-    prefs.setBool('isLogin', true);
-    return true;
-  } else {
-    return false;
-  }
-}
-
-// cookies
-Future<void> saveCookies(List<Cookie> cookies) async {
-  final prefs = await SharedPreferences.getInstance();
-  final cookieList = cookies.map((cookie) => cookie.toJson()).toList();
-  await prefs.setString('cookies', jsonEncode(cookieList));
-}
-
-Future<List<Cookie?>> getSavedCookies() async {
-  final prefs = await SharedPreferences.getInstance();
-  final String? cookieString = prefs.getString('cookies');
-  if (cookieString != null) {
-    final List cookieList = jsonDecode(cookieString);
-    return cookieList.map((cookieMap) => Cookie.fromMap(cookieMap)).toList();
-  }
-  return [];
-}
-
-Future<bool> deleteSavedCookies() async {
-  final prefs = await SharedPreferences.getInstance();
-  final String? cookieString = prefs.getString('cookies');
-  if (cookieString != null) {
-    return prefs.remove('cookies');
-  }
-  return false;
-}
-
+// UserProfile
 Future<UserProfile> getUserProfileFromPrefs() async {
   final prefs = await SharedPreferences.getInstance();
   final String? userProfileJsonString = prefs.getString('userProfile');
@@ -76,6 +16,25 @@ Future<UserProfile> getUserProfileFromPrefs() async {
   }
 }
 
+Future<void> saveUserProfileToPrefs(UserProfile userProfile) async {
+  final prefs = await SharedPreferences.getInstance();
+  final userProfileJsonString = jsonEncode(userProfile.toJson());
+  await prefs.setString('userProfile', userProfileJsonString);
+}
+
+Future<void> editUserProfileInPrefs(Map<String, dynamic> updates) async {
+  UserProfile userProfile = await getUserProfileFromPrefs();
+  updates.forEach((key, value) {
+    if (key == 'cookies') {
+      userProfile.cookies = value;
+    } else if (key == 'isLogin') {
+      userProfile.isLogin = value;
+    }
+  });
+  await saveUserProfileToPrefs(userProfile);
+}
+
+// WaterFreeProfile
 Future<WaterFreeProfile> getWaterFreeProfileFromPrefs() async {
   final prefs = await SharedPreferences.getInstance();
   final String? waterFreeProfileJsonString =
@@ -86,4 +45,23 @@ Future<WaterFreeProfile> getWaterFreeProfileFromPrefs() async {
   } else {
     return WaterFreeProfile(cardId: '', waterDispenserList: []);
   }
+}
+
+Future<void> saveWaterFreeProfileToPrefs(
+    WaterFreeProfile waterFreeProfile) async {
+  final prefs = await SharedPreferences.getInstance();
+  final waterFreeProfileJsonString = jsonEncode(waterFreeProfile.toJson());
+  await prefs.setString('waterFreeProfile', waterFreeProfileJsonString);
+}
+
+Future<void> editWaterFreeProfileInPrefs(Map<String, dynamic> updates) async {
+  WaterFreeProfile waterFreeProfile = await getWaterFreeProfileFromPrefs();
+  updates.forEach((key, value) {
+    if (key == 'cardId') {
+      waterFreeProfile.cardId = value;
+    } else if (key == 'waterDispenserList') {
+      waterFreeProfile.waterDispenserList = List<WaterDispenser>.from(value);
+    }
+  });
+  await saveWaterFreeProfileToPrefs(waterFreeProfile);
 }

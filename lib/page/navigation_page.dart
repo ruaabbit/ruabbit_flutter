@@ -1,7 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:ruabbit_flutter/model/user_profile.dart';
-import 'login_page.dart';
 import 'main_page.dart';
 import 'me_page.dart';
 
@@ -19,7 +16,6 @@ class NavigationPageState extends State<NavigationPage> {
   late final List<Widget> _pages;
 
   void _handleLogout(bool result) {
-    debugPrint(result.toString());
     setState(() {
       _selectedIndex = 0;
     });
@@ -35,7 +31,7 @@ class NavigationPageState extends State<NavigationPage> {
   void initState() {
     super.initState();
     _pages = [
-      const MainPage(), // 替换为您的主页
+      const MainPage(),
       const MePage(),
     ];
   }

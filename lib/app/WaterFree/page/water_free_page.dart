@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:ruabbit_flutter/app/WaterFree/model/water_free_profile.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 
+import '../../../util/persist.dart';
 import '../util/command.dart';
 
 class WaterFreePage extends StatefulWidget {
@@ -52,6 +53,31 @@ class _WaterFreePageState extends State<WaterFreePage> {
     );
   }
 
+  Future<void> _addWaterDispenser(WaterFreeProfile waterFreeProfile) async {
+    waterFreeProfile.addWaterDispenser(
+      newMachineIDController.text,
+      newDescriptionController.text,
+    );
+    await saveWaterFreeProfileToPrefs(waterFreeProfile);
+    newMachineIDController.clear();
+    newDescriptionController.clear();
+    if (mounted) Navigator.of(context).pop();
+  }
+
+  Future<void> _removeWaterDispenser(
+      WaterFreeProfile waterFreeProfile, int index) async {
+    final waterDispenser = waterFreeProfile.waterDispenserList[index];
+    waterFreeProfile.removeWaterDispenser(index);
+    await saveWaterFreeProfileToPrefs(waterFreeProfile);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${waterDispenser.machineID} 已删除'),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final waterFreeProfile = Provider.of<WaterFreeProfile>(context);
@@ -93,17 +119,7 @@ class _WaterFreePageState extends State<WaterFreePage> {
                         child: const Text('取消'),
                       ),
                       TextButton(
-                        onPressed: () {
-                          // 添加新的饮水机
-                          waterFreeProfile.addWaterDispenser(
-                            newMachineIDController.text,
-                            newDescriptionController.text,
-                          );
-                          // 清空输入框
-                          newMachineIDController.clear();
-                          newDescriptionController.clear();
-                          Navigator.of(context).pop();
-                        },
+                        onPressed: () => _addWaterDispenser(waterFreeProfile),
                         child: const Text('保存'),
                       ),
                     ],
@@ -186,15 +202,10 @@ class _WaterFreePageState extends State<WaterFreePage> {
                                 await _showDeleteConfirmationDialog(context);
                             return confirm;
                           },
-                          onDismissed: (direction) {
+                          onDismissed: (direction) async {
                             // 删除饮水机
-                            waterFreeProfile.removeWaterDispenser(index);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content:
-                                    Text('${waterDispenser.machineID} 已删除'),
-                              ),
-                            );
+                            await _removeWaterDispenser(
+                                waterFreeProfile, index);
                           },
                           background: Container(
                             color: Colors.red,

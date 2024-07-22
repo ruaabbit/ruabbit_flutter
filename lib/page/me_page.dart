@@ -35,16 +35,17 @@ class MePageState extends State<MePage> {
     super.dispose();
   }
 
-  void _logout() {
-    // deleteSavedCookies();
-    // deleteIsLogin();
+  Future<void> _logout() async {
     cookieManager.deleteAllCookies();
     cookieManager.removeSessionCookies();
     PlatformWebStorageManager(const PlatformWebStorageManagerCreationParams())
         .deleteAllData();
 
-    Provider.of<UserProfile>(context, listen: false).isLogin = false;
-    Provider.of<UserProfile>(context, listen: false).clearCookies();
+    final userProfile = Provider.of<UserProfile>(context, listen: false);
+    userProfile.isLogin = false;
+    userProfile.clearCookies();
+
+    await saveUserProfileToPrefs(userProfile);
 
     // widget.onLogoutCallback(true);
   }
@@ -55,10 +56,27 @@ class MePageState extends State<MePage> {
     }
   }
 
+  Future<void> _saveCardNumber() async {
+    final cardId = cardNumController.text;
+    await editWaterFreeProfileInPrefs({
+      'cardId': cardId,
+    });
+
+    if (mounted) {
+      // 更新Provider中的cardId
+      Provider.of<WaterFreeProfile>(context, listen: false).cardId = cardId;
+
+      // 显示保存成功的提示
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('卡号已保存')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final userProfile = Provider.of<UserProfile>(context);
-    final waterFreeProfile = Provider.of<WaterFreeProfile>(context);
+    // final waterFreeProfile = Provider.of<WaterFreeProfile>(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -101,8 +119,7 @@ class MePageState extends State<MePage> {
               children: [
                 TextButton(
                   onPressed: () {
-                    Provider.of<WaterFreeProfile>(context, listen: false)
-                        .cardId = cardNumController.text;
+                    _saveCardNumber();
                   },
                   child: const Text('保存'),
                 ),
