@@ -2,12 +2,11 @@ import 'dart:convert';
 
 import 'package:encrypt/encrypt.dart' as encrypt_lib;
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../util/toast.dart';
 
 class AESCoder {
-  static final key = encrypt_lib.Key.fromBase64('3n4DdO47LWH2Co/WfpbdyA==');
+  static final key = encrypt_lib.Key.fromBase64('kv7XjPzrDNJY0pdZNVdwDw==');
 
   static String encrypt(String data) {
     final iv = encrypt_lib.IV.fromLength(16);
@@ -106,6 +105,35 @@ class AESCoder {
 //   }
 // }
 
+String getNowFormatDate() {
+  DateTime t = DateTime.now();
+  String e = t.year.toString();
+
+  String callback(int t, String e) {
+    if (t < 10) {
+      e += "0$t";
+    } else {
+      e += t.toString();
+    }
+    return e;
+  }
+
+  e = callback(t.month, e);
+  e = callback(t.day, e);
+  e = callback(t.hour, e);
+  e = callback(t.minute, e);
+  e = callback(t.second, e);
+  return e;
+}
+
+String getEncryptedGetTokenInfo(cardNum){
+  var time = getNowFormatDate();
+  var data = '{"userid":"$cardNum","userpassword":"DNJY0pdZNVdwDw","time":"$time"}';
+  var info = AESCoder.encrypt(data);
+  info = Uri.encodeComponent(info);
+  return info;
+}
+
 Future<String> getToken(String encrypted) async {
   var resp = await http.get(Uri.parse(
       'http://222.195.158.17:5001/waterapi/api/GetToken?info=$encrypted'));
@@ -122,15 +150,15 @@ Future<String> getToken(String encrypted) async {
 }
 
 void waterStart(cardNum, machineNum) {
-  var data =
-      '{"userid":"$cardNum","userpassword":"kv7XjPzrDNJY0pdZ#","time":"20230804080808"}';
 
-  final encrypted = AESCoder.encrypt(data);
+  final encrypted = getEncryptedGetTokenInfo(cardNum);
 
   Future<bool> getWater(token) async {
     if (token != '') {
+      var info = AESCoder.encrypt('{"ano":"$cardNum","posno":"$machineNum","balance":99999,"costmoney":100}');
+      info = Uri.encodeComponent(info);
       var resp = await http.get(Uri.parse(
-          'http://222.195.158.17:5001/waterapi/api/ActStartCostNotice?posno=$machineNum&ano=$cardNum&balance=99999&costmoney=100&token=$token'));
+          'http://222.195.158.17:5001/waterapi/api/ActStartCostNotice?info=$info&token=$token'));
       if (resp.statusCode == 200) {
         return true;
       } else {
@@ -153,15 +181,15 @@ void waterStart(cardNum, machineNum) {
 }
 
 void waterStop(cardNum, machineNum) {
-  var data =
-      '{"userid":"$cardNum","userpassword":"kv7XjPzrDNJY0pdZ#","time":"20230804080808"}';
-
-  final encrypted = AESCoder.encrypt(data);
+  
+  final encrypted = getEncryptedGetTokenInfo(cardNum);
 
   Future<bool> getWater(token) async {
     if (token != '') {
+      var info = AESCoder.encrypt('{"ano":"$cardNum","posno":"$machineNum"}');
+      info = Uri.encodeComponent(info);
       var resp = await http.get(Uri.parse(
-          'http://222.195.158.17:5001/waterapi/api/ActOverCostNotice?posno=$machineNum&ano=$cardNum&balance=99999&costmoney=100&token=$token'));
+          'http://222.195.158.17:5001/waterapi/api/ActOverCostNotice?info=$info&token=$token'));
       if (resp.statusCode == 200) {
         return true;
       } else {
