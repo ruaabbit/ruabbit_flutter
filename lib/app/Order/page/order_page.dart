@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../model/user_profile.dart';
 import '../model/phone_profile.dart';
 import 'dart:convert';
+import 'package:mobile_scanner/mobile_scanner.dart';
 
 class OrderPage extends StatefulWidget {
   const OrderPage({super.key});
@@ -17,6 +18,7 @@ class _OrderPageState extends State<OrderPage> {
   String _orderStatus = '加载中...';
   bool _isDriving = false;
   final OrderService _orderService = OrderService();
+  bool _showScanner = false;
 
   @override
   void initState() {
@@ -230,84 +232,124 @@ class _OrderPageState extends State<OrderPage> {
     }
   }
 
+  void _startScanning() {
+    setState(() {
+      _showScanner = true;
+    });
+  }
+
+  void _onScan(String? code) {
+    if (code != null) {
+      // 从URL中提取数字部分
+      final RegExp regExp = RegExp(r'randnum=(\d+)');
+      final match = regExp.firstMatch(code);
+      if (match != null) {
+        setState(() {
+          _codeController.text = match.group(1) ?? '';
+          _showScanner = false;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('订单'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  children: [
-                    const Text(
-                      '订单状态',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      _orderStatus,
-                      style: TextStyle(
-                        fontSize: 24,
-                        color: _orderStatus.startsWith('正在使用') ? Colors.green : Colors.blue,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-            TextField(
-              controller: _codeController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: '请输入乘车码',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.qr_code),
-              ),
-              enabled: !_isDriving,
-            ),
-            const SizedBox(height: 20),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: _orderStatus.startsWith('正在使用') ? null : _startDriving,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                    ),
-                    child: const Text(
-                      '开车',
-                      style: TextStyle(fontSize: 18),
+      body: _showScanner ? _buildScanner() : _buildMainContent(),
+    );
+  }
+
+  Widget _buildScanner() {
+    return Scaffold(
+      body: MobileScanner(
+        onDetect: (capture) {
+          final List<Barcode> barcodes = capture.barcodes;
+          if (barcodes.isNotEmpty) {
+            _onScan(barcodes.first.rawValue);
+          }
+        },
+      ),
+    );
+  }
+
+  Widget _buildMainContent() {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                  const Text(
+                    '订单状态',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: _orderStatus.startsWith('正在使用') ? _returnCar : null,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                    ),
-                    child: const Text(
-                      '还车',
-                      style: TextStyle(fontSize: 18),
+                  const SizedBox(height: 8),
+                  Text(
+                    _orderStatus,
+                    style: TextStyle(
+                      fontSize: 24,
+                      color: _orderStatus.startsWith('正在使用') ? Colors.green : Colors.blue,
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 20),
+          TextField(
+            controller: _codeController,
+            keyboardType: TextInputType.number,
+            decoration: InputDecoration(
+              labelText: '请输入乘车码',
+              border: const OutlineInputBorder(),
+              prefixIcon: IconButton(
+                icon: const Icon(Icons.qr_code),
+                onPressed: _startScanning,
+              ),
+            ),
+            enabled: !_isDriving,
+          ),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: _orderStatus.startsWith('正在使用') ? null : _startDriving,
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: const Text(
+                    '开车',
+                    style: TextStyle(fontSize: 18),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: _orderStatus.startsWith('正在使用') ? _returnCar : null,
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: const Text(
+                    '还车',
+                    style: TextStyle(fontSize: 18),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
