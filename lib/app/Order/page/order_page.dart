@@ -5,6 +5,7 @@ import '../../../model/user_profile.dart';
 import '../model/phone_profile.dart';
 import 'dart:convert';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'dart:async';
 
 class OrderPage extends StatefulWidget {
   const OrderPage({super.key});
@@ -19,11 +20,37 @@ class _OrderPageState extends State<OrderPage> {
   bool _isDriving = false;
   final OrderService _orderService = OrderService();
   bool _showScanner = false;
+  DateTime? _startTime;
+  Timer? _timer;
+  String _ridingTime = '00:00';
 
   @override
   void initState() {
     super.initState();
     _fetchOrderStatus();
+  }
+
+  void _startTimer() {
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_startTime != null) {
+        final now = DateTime.now();
+        final difference = now.difference(_startTime!);
+        final minutes = difference.inMinutes.toString().padLeft(2, '0');
+        final seconds = (difference.inSeconds % 60).toString().padLeft(2, '0');
+        setState(() {
+          _ridingTime = '$minutes:$seconds';
+        });
+      }
+    });
+  }
+
+  void _stopTimer() {
+    _timer?.cancel();
+    _timer = null;
+    setState(() {
+      _ridingTime = '00:00';
+    });
   }
 
   Future<void> _fetchOrderStatus() async {
@@ -33,15 +60,22 @@ class _OrderPageState extends State<OrderPage> {
       setState(() {
         if (response['message'] != null) {
           _orderStatus = response['message'];
+          _stopTimer();
         } else if (response['data'] != null && response['data']['car_number'] != null) {
           _orderStatus = '正在使用  ${response['data']['car_number']}';
+          if (response['data']['car_start_time'] != null) {
+            _startTime = DateTime.parse(response['data']['car_start_time']);
+            _startTimer();
+          }
         } else {
           _orderStatus = '未知状态';
+          _stopTimer();
         }
       });
     } catch (e) {
       setState(() {
         _orderStatus = '获取状态失败';
+        _stopTimer();
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('错误: $e')),
@@ -89,6 +123,7 @@ class _OrderPageState extends State<OrderPage> {
   @override
   void dispose() {
     _codeController.dispose();
+    _timer?.cancel();
     super.dispose();
   }
 
@@ -121,6 +156,11 @@ class _OrderPageState extends State<OrderPage> {
           final unlockResponse = await _orderService.unlockCar(token, phoneProfile);
           if (unlockResponse['status_code'] != 200) {
             throw Exception('开锁失败: ${unlockResponse['message']}');
+          } else {
+            setState(() {
+              _startTime = DateTime.now();
+            });
+            _startTimer();
           }
         } catch (e) {
           // 如果开锁失败，显示错误信息并返回
@@ -208,6 +248,7 @@ class _OrderPageState extends State<OrderPage> {
                     _codeController.clear();
                   });
                   _pollOrderStatus(false);
+                  _stopTimer();
                 }
               },
               child: const Text('确定'),
@@ -301,6 +342,16 @@ class _OrderPageState extends State<OrderPage> {
                       color: _orderStatus.startsWith('正在使用') ? Colors.green : Colors.blue,
                     ),
                   ),
+                  if (_orderStatus.startsWith('正在使用')) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      '骑行时间：$_ridingTime',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
