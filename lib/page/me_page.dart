@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:provider/provider.dart';
 import 'package:ruabbit_flutter/app/WaterFree/model/water_free_profile.dart';
+import 'package:ruabbit_flutter/app/Order/model/phone_profile.dart';
 import '../model/user_profile.dart';
 import '../util/persist.dart';
 import 'login_page.dart';
+import 'package:ruabbit_flutter/app/Order/service/order_service.dart';
 
 class MePage extends StatefulWidget {
   const MePage({super.key});
@@ -16,6 +18,10 @@ class MePage extends StatefulWidget {
 class MePageState extends State<MePage> {
   late CookieManager cookieManager;
   final cardNumController = TextEditingController();
+  final sevenMATokenController = TextEditingController();
+  final phoneBrandController = TextEditingController();
+  final phoneSystemController = TextEditingController();
+  final phoneModelController = TextEditingController();
 
   @override
   void initState() {
@@ -26,12 +32,22 @@ class MePageState extends State<MePage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       cardNumController.text =
           Provider.of<WaterFreeProfile>(context, listen: false).cardId;
+      sevenMATokenController.text =
+          Provider.of<UserProfile>(context, listen: false).token;
+      final phoneProfile = Provider.of<PhoneProfile>(context, listen: false);
+      phoneBrandController.text = phoneProfile.phoneBrand;
+      phoneSystemController.text = phoneProfile.phoneSystem;
+      phoneModelController.text = phoneProfile.phoneModel;
     });
   }
 
   @override
   void dispose() {
     cardNumController.dispose();
+    sevenMATokenController.dispose();
+    phoneBrandController.dispose();
+    phoneSystemController.dispose();
+    phoneModelController.dispose();
     super.dispose();
   }
 
@@ -46,8 +62,6 @@ class MePageState extends State<MePage> {
     userProfile.clearCookies();
 
     await saveUserProfileToPrefs(userProfile);
-
-    // widget.onLogoutCallback(true);
   }
 
   void _login(bool result) {
@@ -73,10 +87,46 @@ class MePageState extends State<MePage> {
     }
   }
 
+  Future<void> _saveSevenMAToken() async {
+    final token = sevenMATokenController.text;
+    
+    await editUserProfileInPrefs({
+      'token': token,
+    });
+
+    if (mounted) {
+      // 更新Provider中的token
+      Provider.of<UserProfile>(context, listen: false).token = token;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('7MA Token已保存')),
+      );
+    }
+  }
+
+  Future<void> _savePhoneInfo() async {
+    await editPhoneProfileInPrefs({
+      'phoneBrand': phoneBrandController.text,
+      'phoneSystem': phoneSystemController.text,
+      'phoneModel': phoneModelController.text,
+    });
+
+    if (mounted) {
+      // 更新Provider中的手机信息
+      final phoneProfile = Provider.of<PhoneProfile>(context, listen: false);
+      phoneProfile.phoneBrand = phoneBrandController.text;
+      phoneProfile.phoneSystem = phoneSystemController.text;
+      phoneProfile.phoneModel = phoneModelController.text;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('手机信息已保存')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final userProfile = Provider.of<UserProfile>(context);
-    // final waterFreeProfile = Provider.of<WaterFreeProfile>(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -168,7 +218,58 @@ class MePageState extends State<MePage> {
               ],
             ),
           ),
-
+          const Divider(),
+          ListTile(
+            title: const Text('7MA Header设置'),
+            subtitle: Column(
+              children: [
+                TextField(
+                  controller: phoneBrandController,
+                  decoration: const InputDecoration(
+                    labelText: 'Phone-Brand',
+                    border: UnderlineInputBorder(),
+                  ),
+                ),
+                TextField(
+                  controller: phoneSystemController,
+                  decoration: const InputDecoration(
+                    labelText: 'Phone-System',
+                    border: UnderlineInputBorder(),
+                  ),
+                ),
+                TextField(
+                  controller: phoneModelController,
+                  decoration: const InputDecoration(
+                    labelText: 'Phone-Model',
+                    border: UnderlineInputBorder(),
+                  ),
+                ),
+              ],
+            ),
+            trailing: TextButton(
+              onPressed: _savePhoneInfo,
+              child: const Text('保存'),
+            ),
+          ),
+          const Divider(),
+          // 显示7MA Token
+          ListTile(
+            title: const Text('7MA 乘车Token'),
+            subtitle: TextField(
+              controller: sevenMATokenController,
+              maxLines: 3,
+              decoration: const InputDecoration(
+                hintText: '请输入7MA乘车Token',
+                border: UnderlineInputBorder(),
+              ),
+            ),
+            trailing: TextButton(
+              onPressed: () {
+                _saveSevenMAToken();
+              },
+              child: const Text('保存'),
+            ),
+          ),
           const Divider(),
           // 显示其他数据
           Expanded(
