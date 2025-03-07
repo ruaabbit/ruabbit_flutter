@@ -297,7 +297,7 @@ class _OrderPageState extends State<OrderPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('订单'),
+        title: const Text('7MA骑行'),
       ),
       body: _showScanner ? _buildScanner() : _buildMainContent(),
     );
@@ -305,13 +305,24 @@ class _OrderPageState extends State<OrderPage> {
 
   Widget _buildScanner() {
     return Scaffold(
-      body: MobileScanner(
-        onDetect: (capture) {
-          final List<Barcode> barcodes = capture.barcodes;
-          if (barcodes.isNotEmpty) {
-            _onScan(barcodes.first.rawValue);
-          }
-        },
+      body: Stack(
+        children: [
+          MobileScanner(
+            controller: MobileScannerController(
+              detectionSpeed: DetectionSpeed.unrestricted,
+              formats: const [BarcodeFormat.qrCode],
+              facing: CameraFacing.back,
+              useNewCameraSelector: true,
+              cameraResolution: const Size(1920, 1080),
+            ),
+            onDetect: (capture) {
+              final List<Barcode> barcodes = capture.barcodes;
+              if (barcodes.isNotEmpty) {
+                _onScan(barcodes.first.rawValue);
+              }
+            },
+          )
+        ],
       ),
     );
   }
