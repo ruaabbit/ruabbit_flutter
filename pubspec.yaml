@@ -43,6 +43,8 @@ dependencies:
   haptic_feedback: ^0.5.1+1
   flutter_displaymode: ^0.6.0
   fluttertoast: ^8.2.6
+  http: ^1.2.0
+  mobile_scanner: ^3.5.6
 
 dev_dependencies:
   flutter_test:

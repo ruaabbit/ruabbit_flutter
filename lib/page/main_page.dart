@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../app/WaterFree/page/water_free_page.dart';
+import '../app/Order/page/order_page.dart';
 
 class MainPage extends StatelessWidget {
   const MainPage({super.key});
@@ -39,27 +40,31 @@ class MainPage extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
             ),
             child: ListTile(
-              title: const Text('Item 2'),
+              title: const Text('7MA'),
               trailing: const Icon(Icons.arrow_forward),
               onTap: () {
-                // Add your navigation code here
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const OrderPage()),
+                );
               },
             ),
           ),
-          Card(
-            elevation: 2,
-            margin: const EdgeInsets.symmetric(vertical: 8.0),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: ListTile(
-              title: const Text('Item 3'),
-              trailing: const Icon(Icons.arrow_forward),
-              onTap: () {
-                // Add your navigation code here
-              },
-            ),
-          ),
+          // Card(
+          //   elevation: 2,
+          //   margin: const EdgeInsets.symmetric(vertical: 8.0),
+          //   shape: RoundedRectangleBorder(
+          //     borderRadius: BorderRadius.circular(12),
+          //   ),
+          //   child: ListTile(
+          //     title: const Text('Item 3'),
+          //     trailing: const Icon(Icons.arrow_forward),
+          //     onTap: () {
+          //       // Add your navigation code here
+          //     },
+          //   ),
+          // ),
           // Add more ListTiles as needed
         ],
       ),
