@@ -486,7 +486,12 @@ class _OrderPageState extends State<OrderPage> {
                   children: [
                     Column(
                       children: [
-                        const Icon(Icons.battery_charging_full, color: Colors.green),
+                        Icon(
+                          Icons.battery_charging_full,
+                          color: (double.tryParse(_electricity.replaceAll('%', '')) ?? 100) >= 50
+                              ? Colors.green
+                              : Colors.red,
+                        ),
                         const SizedBox(height: 8),
                         Text(
                           '电量',
