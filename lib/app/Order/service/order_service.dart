@@ -108,4 +108,24 @@ class OrderService {
       throw Exception('网络请求错误: $e');
     }
   }
+
+  Future<Map<String, dynamic>> getCarInfo(String token, String carNumber) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/car/$carNumber'),
+        headers: {
+          'Host': 'newmapi.7mate.cn',
+          'Authorization': token,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        throw Exception('请求失败: ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('网络请求错误: $e');
+    }
+  }
 } 
