@@ -22,7 +22,10 @@ class _OrderPageState extends State<OrderPage> {
   bool _showScanner = false;
   DateTime? _startTime;
   Timer? _timer;
+  Timer? _debounceTimer;
   String _ridingTime = '00:00';
+  String _electricity = '';
+  String _mileage = '';
 
   @override
   void initState() {
@@ -62,11 +65,16 @@ class _OrderPageState extends State<OrderPage> {
           _orderStatus = response['message'];
           _stopTimer();
         } else if (response['data'] != null && response['data']['car_number'] != null) {
-          _orderStatus = '正在使用  ${response['data']['car_number']}';
+          String carNumber = response['data']['car_number'];
+          _orderStatus = '正在使用  $carNumber';
+          _codeController.text = carNumber;  // 设置输入框的值
+          _isDriving = true;  // 设置为骑行状态
           if (response['data']['car_start_time'] != null) {
             _startTime = DateTime.parse(response['data']['car_start_time']);
             _startTimer();
           }
+          // 获取车辆信息
+          _fetchCarInfo();
         } else {
           _orderStatus = '未知状态';
           _stopTimer();
@@ -124,6 +132,7 @@ class _OrderPageState extends State<OrderPage> {
   void dispose() {
     _codeController.dispose();
     _timer?.cancel();
+    _debounceTimer?.cancel();
     super.dispose();
   }
 
@@ -289,7 +298,53 @@ class _OrderPageState extends State<OrderPage> {
           _codeController.text = match.group(1) ?? '';
           _showScanner = false;
         });
+        // 扫码完成后立即获取车辆信息，不需要防抖
+        _fetchCarInfo();
       }
+    }
+  }
+
+  void _debouncedFetchCarInfo() {
+    // 取消之前的定时器
+    _debounceTimer?.cancel();
+    // 设置新的定时器
+    _debounceTimer = Timer(const Duration(milliseconds: 500), () {
+      _fetchCarInfo();
+    });
+  }
+
+  Future<void> _fetchCarInfo() async {
+    if (_codeController.text.isEmpty) {
+      setState(() {
+        _electricity = '';
+        _mileage = '';
+      });
+      return;
+    }
+
+    try {
+      String token = Provider.of<UserProfile>(context, listen: false).token;
+      final response = await _orderService.getCarInfo(token, _codeController.text);
+      
+      if (response['data'] != null) {
+        setState(() {
+          _electricity = response['data']['electricity'] ?? '获取失败';
+          _mileage = response['data']['mileage'] ?? '获取失败';
+        });
+      } else {
+        setState(() {
+          _electricity = '获取失败';
+          _mileage = '获取失败';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _electricity = '获取失败';
+        _mileage = '获取失败';
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('获取车辆信息失败: $e')),
+      );
     }
   }
 
@@ -380,6 +435,16 @@ class _OrderPageState extends State<OrderPage> {
               ),
             ),
             enabled: !_isDriving,
+            onChanged: (value) {
+              if (value.isNotEmpty) {
+                _debouncedFetchCarInfo();
+              } else {
+                setState(() {
+                  _electricity = '';
+                  _mileage = '';
+                });
+              }
+            },
           ),
           const SizedBox(height: 20),
           Row(
@@ -411,6 +476,66 @@ class _OrderPageState extends State<OrderPage> {
               ),
             ],
           ),
+          if (_electricity.isNotEmpty && _mileage.isNotEmpty) ...[
+            const SizedBox(height: 20),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    Column(
+                      children: [
+                        const Icon(Icons.battery_charging_full, color: Colors.green),
+                        const SizedBox(height: 8),
+                        Text(
+                          '电量',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _electricity,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Container(
+                      height: 50,
+                      width: 1,
+                      color: Colors.grey[300],
+                    ),
+                    Column(
+                      children: [
+                        const Icon(Icons.directions_bike, color: Colors.blue),
+                        const SizedBox(height: 8),
+                        Text(
+                          '里程',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _mileage,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
